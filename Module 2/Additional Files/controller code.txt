@@ -1,0 +1,25 @@
+	@RequestMapping(value="/exportToCRM.html", method=RequestMethod.GET)
+	public ModelAndView show()
+	{
+		CustomerClientVersion newCustomer = new CustomerClientVersion();
+		newCustomer.setCompanyName("Virtual Pair Programmers");
+		newCustomer.setCustomerId("VPP-1001");
+		newCustomer.setEmail("richard@capabilitytm.com");
+		newCustomer.setTelephone("6323003");
+		newCustomer.setNotes("This has been prepopulated, for convenience!");
+		return new ModelAndView("/exportForm.jsp", "customer", newCustomer);
+	}	
+
+	@RequestMapping(value="/exportToCRM.html", method=RequestMethod.POST)
+	public ModelAndView processForm(@Valid CustomerClientVersion customer, Errors result)
+	{
+		if (result.hasErrors())
+		{
+			return new ModelAndView("/exportForm.jsp", "customer", customer);
+		}
+		String url = "http://localhost:8080/crm/rest/customers";
+		
+		// call the external CRM system and then redirect to show all contacts page.
+		oauthTemplate.postForLocation(url, customer);
+		return new ModelAndView("redirect:/importFromCrm");
+	}

@@ -1,0 +1,58 @@
+
+<beans:beans xmlns="http://www.springframework.org/schema/security" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:beans="http://www.springframework.org/schema/beans"   
+	xmlns:tx="http://www.springframework.org/schema/tx"   
+
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans 
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd        
+        http://www.springframework.org/schema/security 
+        http://www.springframework.org/schema/security/spring-security.xsd">
+            
+    <beans:bean id="datasource" class="org.apache.commons.dbcp.BasicDataSource">
+    	<beans:property name="driverClassName" value="org.apache.derby.jdbc.ClientDriver"/>
+    	<beans:property name="url" value="jdbc:derby://localhost/BookStore"/>
+    </beans:bean>
+    
+    <beans:bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+    	<beans:property name="dataSource" ref="datasource"/>
+    </beans:bean>
+    
+    <tx:annotation-driven/>
+            
+	<beans:bean id="myFailureHandler" class="com.virtualpairprogrammers.security.UsernameRememberingAuthenticationFailureHandler" autowire="byType">
+		<beans:property name="redirectTarget" value="/login.jsp"/>
+	</beans:bean>
+		            
+    <http pattern="/styles.css" security="none"/>
+                
+	<http>		
+		<csrf disabled="true"/>
+		
+		<intercept-url pattern="/login.jsp" access="permitAll"/>
+		<intercept-url pattern="/createAccount.do" access="permitAll"/>
+		<intercept-url pattern="/addNewBook.do" access="hasRole('ROLE_ADMIN')"/>
+		<intercept-url pattern="/**" access="hasRole('ROLE_USER')"/>			
+				
+		<form-login  login-processing-url="/performLogin" password-parameter="vppPassword"
+					 username-parameter="fancyUsername"
+					 login-page="/login.jsp"
+					 authentication-failure-handler-ref="myFailureHandler"/>
+					 
+		<logout logout-success-url="/viewAllBooks.do"/> <!-- /logout; automatically logout -->
+ 	</http>
+		 
+	<!-- TODO explain why an alias in the next chapter -->
+	<authentication-manager alias="vppAuthenticator">
+		<authentication-provider >
+			<password-encoder hash="bcrypt">
+			</password-encoder>
+			<jdbc-user-service data-source-ref="datasource" />
+		</authentication-provider>
+	</authentication-manager>
+	
+
+</beans:beans>	
